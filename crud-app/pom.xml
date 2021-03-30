@@ -68,27 +68,8 @@
 					<annotationProcessors>
 						<annotationProcessor>org.gox.annotation.processor.CrudProcessor</annotationProcessor>
 					</annotationProcessors>
-					<generatedSourcesDirectory>${project.build.directory}/target/generated-sources</generatedSourcesDirectory>
+					<generatedSourcesDirectory>${project.build.directory}/generated-sources</generatedSourcesDirectory>
 				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>3.2.0</version>
-				<executions>
-					<execution>
-						<id>test</id>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>add-source</goal>
-						</goals>
-						<configuration>
-							<sources>
-								<source>${project.build.directory}/target/generated-sources</source>
-							</sources>
-						</configuration>
-					</execution>
-				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

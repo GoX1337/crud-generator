@@ -32,24 +32,31 @@ public class CrudProcessor extends AbstractProcessor {
     }
 
     public void printClassElement(Element element) {
-        if(ElementKind.CLASS.equals(element.getKind())) {
+        if (ElementKind.CLASS.equals(element.getKind())) {
             System.out.println(element);
             element.getEnclosedElements().forEach(this::printAttributeElement);
         }
 
         JavaFileObject builderFile = null;
         try {
-            builderFile = processingEnv.getFiler().createSourceFile("Hey");
+            builderFile = processingEnv.getFiler().createSourceFile("org.gox.crud.app.KekController");
             try (PrintWriter out = new PrintWriter(builderFile.openWriter())) {
-                out.println("public class Hey { }");
+                out.println("package org.gox.crud.app;\n");
+                out.println("import org.springframework.web.bind.annotation.GetMapping;\n");
+                out.println("import org.springframework.web.bind.annotation.RestController;\n");
+                out.println("@RestController");
+                out.println("public class KekController {\n");
+                out.println("@GetMapping");
+                out.println("public String get(){ return \"Hello there\"; }\n");
+                out.println("}\n");
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void printAttributeElement(Element element){
-        if(ElementKind.FIELD.equals(element.getKind())) {
+    public void printAttributeElement(Element element) {
+        if (ElementKind.FIELD.equals(element.getKind())) {
             System.out.println("\t- " + element);
         }
     }
