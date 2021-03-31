@@ -1,5 +1,10 @@
 package org.gox.annotation.processor;
 
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeSpec;
+
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -7,10 +12,10 @@ import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.tools.JavaFileObject;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Set;
 
@@ -32,32 +37,63 @@ public class CrudProcessor extends AbstractProcessor {
     }
 
     public void printClassElement(Element element) {
-        if (ElementKind.CLASS.equals(element.getKind())) {
-            System.out.println(element);
-            element.getEnclosedElements().forEach(this::printAttributeElement);
-        }
-
-        JavaFileObject builderFile = null;
         try {
-            builderFile = processingEnv.getFiler().createSourceFile("org.gox.crud.app.KekController");
-            try (PrintWriter out = new PrintWriter(builderFile.openWriter())) {
-                out.println("package org.gox.crud.app;\n");
-                out.println("import org.springframework.web.bind.annotation.GetMapping;\n");
-                out.println("import org.springframework.web.bind.annotation.RestController;\n");
-                out.println("@RestController");
-                out.println("public class KekController {\n");
-                out.println("@GetMapping");
-                out.println("public String get(){ return \"Hello there\"; }\n");
-                out.println("}\n");
+            if (ElementKind.CLASS.equals(element.getKind())) {
+                System.out.println(element);
+                generateRepositoryClassFile(element);
+                generateController(element);
             }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void generateController(Element element) {
+        MethodSpec main = MethodSpec.methodBuilder("main")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(void.class)
+                .addParameter(String[].class, "args")
+                .addStatement("$T.out.println($S)", System.class, "Hello, JavaPoet!")
+                .build();
+
+        TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addMethod(main)
+                .build();
+
+        JavaFile javaFile = JavaFile.builder("com.example.helloworld", helloWorld)
+                .build();
+
+        try {
+            javaFile.writeTo(Paths.get("target/generated-sources"));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void printAttributeElement(Element element) {
-        if (ElementKind.FIELD.equals(element.getKind())) {
-            System.out.println("\t- " + element);
+    private void generateRepositoryClassFile(Element element) throws ClassNotFoundException {
+        String entityName = element.getSimpleName().toString();
+        String packageName = element.asType().toString()
+                .replace('.' + entityName, "")
+                .replace("entity", "");
+
+        TypeSpec repositoryInterface = TypeSpec.interfaceBuilder(entityName + "Repository")
+                .addAnnotation(ClassName.get(Class.forName("org.springframework.stereotype.Repository")))
+                .addModifiers(Modifier.PUBLIC)
+                .addSuperinterface(ClassName.get(Class.forName("org.springframework.data.repository.CrudRepository")))
+                .build();
+
+        JavaFile javaFile = JavaFile.builder(packageName, repositoryInterface)
+                .build();
+
+        writeJavaFile(javaFile);
+    }
+
+    private void writeJavaFile(JavaFile javaFile) {
+        try {
+            javaFile.writeTo(Paths.get("target/generated-sources"));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
